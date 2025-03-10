@@ -12,9 +12,9 @@ import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
 
-
 import { useInitials } from '@/hooks/use-initials';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { AvatarUpload } from '@/components/ui/avatar';
+
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Profile settings',
@@ -38,31 +38,26 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
         });
     };
 
-    const getInitials = useInitials();
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Profile settings" />
+
+            
 
             <SettingsLayout>
                 <div className="space-y-6">
                     <HeadingSmall title="Profile information" description="Update your name and email address" />
 
+                        <div className='grid gap-4'>
+                            <Label>Profile Image</Label>
+                            <AvatarUpload user={auth.user} />
+                        </div>
 
 
                     <form onSubmit={submit} className="space-y-6">
 
-                        {/* <div className='grid gap-2'>
-                            <Label>Profile Image</Label>
+                        {/* Replace the commented Avatar section with this */}
 
-                            <Button variant="ghost" className="size-20 rounded-full p-1">
-                                <Avatar className="size-16 overflow-hidden rounded-full">
-                                    <AvatarImage src={auth.user.avatar} alt={auth.user.name} />
-                                    <AvatarFallback className="rounded-lg bg-neutral-200 text-black dark:bg-neutral-700 dark:text-white">
-                                        {getInitials(auth.user.name)}
-                                    </AvatarFallback>
-                                </Avatar>
-                            </Button>
-                        </div> */}
 
                         <div className="grid gap-2">
                             <Label htmlFor="name">Name</Label>

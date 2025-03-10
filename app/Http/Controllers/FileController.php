@@ -22,12 +22,12 @@ class FileController extends Controller
             ]);
 
             return response()->json([
-                'message' => 'Fichier enregistré avec succès',
+                'message' => 'Save with success',
                 'file' => $savedFile
             ], 201);
         }
 
-        return response()->json(['error' => 'Erreur lors de l\'upload'], 400);
+        return response()->json(['error' => 'Error during upload'], 400);
     }
 
     public function download(File $file)
