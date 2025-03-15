@@ -7,11 +7,25 @@ import Header from '@/components/Header';
 import HeroSection from '@/components/HeroSection';
 import PageTransition from '@/components/PageTransition';
 import TestimonialsSection from '@/components/TestimonialsSection';
-import { type SharedData } from '@/types';
-import { Head, Link, usePage } from '@inertiajs/react';
+import { usePage } from '@inertiajs/react';
 
 export default function Welcome() {
-    const { auth } = usePage<SharedData>().props;
+    const { auth, albums } = usePage().props;
+
+    const albumsData = Array.isArray(albums) ? albums : [
+    {
+      id: 1,
+      name: "Ultra",
+      artist: { id: 1, name: "Booba" },
+      cover_image: "https://www.artistikrezo.com/wp-content/uploads/2021/05/ULTRA-BOOBA-585x552-1.jpeg",
+      year: 2021,
+      songs_count: 15,
+      duration: "53 min"
+    },
+    ];
+    
+    console.log("Albums dans Welcome:", albums);
+    console.log("Albums dans Welcome:", albumsData);
 
     return (
     <PageTransition>
@@ -29,7 +43,7 @@ export default function Welcome() {
           {/* Albums Section with subtle gradient background */}
           <section id="trending" className="relative overflow-hidden">
             <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#0A0A0B] via-[#0f1015] to-[#0A0A0B] opacity-90"></div>
-            <AlbumGrid />
+            <AlbumGrid albums={albumsData}/> 
           </section>
           
           {/* Featured Section */}

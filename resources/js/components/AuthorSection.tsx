@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { GithubIcon, LinkedinIcon, TwitterIcon, Mail, Code } from 'lucide-react';
+import { GithubIcon, LinkedinIcon, TwitterIcon, Mail } from 'lucide-react';
 import { playClickSound, playHoverSound } from '@/utils/soundEffects';
 
 interface AuthorProps {

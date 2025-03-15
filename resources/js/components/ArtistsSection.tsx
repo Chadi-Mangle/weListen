@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { Play, X, Heart, Share2, Clock, Music2 } from 'lucide-react';
+import { Play, X, Heart, Share2, Music2 } from 'lucide-react';
 import WaveAnimation from './WaveAnimation';
 
 interface ArtistData {

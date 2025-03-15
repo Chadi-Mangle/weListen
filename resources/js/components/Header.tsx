@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, User, Menu, X, LogOut, Settings, Music, Heart, PlayCircle, UserRound } from 'lucide-react';
+import { Search, Menu, X, LogOut, Settings, Heart, PlayCircle, UserRound } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ConnectionButton } from './ConnectionButton';
 

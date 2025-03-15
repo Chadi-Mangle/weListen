@@ -1,7 +1,6 @@
 
 import React from 'react';
-import { cn } from '@/lib/utils';
-import { Facebook, Twitter, Instagram, Youtube, Headphones, Mail, Heart, ExternalLink } from 'lucide-react';
+import { Facebook, Twitter, Instagram, Youtube, Headphones } from 'lucide-react';
 
 const Footer = () => {
   return (

@@ -46,8 +46,6 @@ class ProfileController extends Controller
      */
     public function updateAvatar(Request $request)
     {
-        Log::info('Tentative de mise à jour de l\'avatar');
-        Log::info('Files reçus:', $request->allFiles());
         
         // Validation explicite avec messages d'erreur personnalisés
         $request->validate([
@@ -97,6 +95,11 @@ class ProfileController extends Controller
         ]);
 
         $user = $request->user();
+        
+        if ($user->avatar) {
+            Storage::disk('public')->delete($user->avatar);
+        }
+        
         Auth::logout();
         $user->delete();
         $request->session()->invalidate();

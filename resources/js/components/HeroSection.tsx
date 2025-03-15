@@ -1,6 +1,5 @@
 
 import React, { useEffect, useRef } from 'react';
-import { cn } from '@/lib/utils';
 import { Play, Headphones } from 'lucide-react';
 import StarBackground from './StarBackground';
 

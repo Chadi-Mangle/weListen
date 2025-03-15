@@ -11,11 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('files', function (Blueprint $table) {
+        Schema::create('playlist_music', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('path');
+            $table->foreignId('playlist_id')->constrained()->onDelete('cascade');
+            $table->foreignId('music_id')->constrained()->onDelete('cascade');
+            $table->integer('position')->default(0);
             $table->timestamps();
+            
+            $table->unique(['playlist_id', 'music_id']);
         });
     }
 
@@ -24,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('files');
+        Schema::dropIfExists('playlist_music');
     }
 };
