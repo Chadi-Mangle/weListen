@@ -16,11 +16,11 @@ import AppLogo from './app-logo';
 import AppLogoIcon from './app-logo-icon';
 
 const mainNavItems: NavItem[] = [
-    {
-        title: 'Dashboard',
-        url: '/dashboard',
-        icon: LayoutGrid,
-    },
+    // {
+    //     title: 'Dashboard',
+    //     url: '/dashboard',
+    //     icon: LayoutGrid,
+    // },
 ];
 
 const rightNavItems: NavItem[] = [

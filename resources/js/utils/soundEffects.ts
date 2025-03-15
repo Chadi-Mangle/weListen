@@ -1,34 +1,25 @@
 
-// Sound effect utility for playing interaction sounds throughout the app
+// Sound effect utility for playing audio effects throughout the app
 
-// Pre-load sounds for better performance
-const clickSound = new Audio('/sounds/click.mp3');
-const hoverSound = new Audio('/sounds/hover.mp3');
-const popSound = new Audio('/sounds/pop.mp3');
-const swooshSound = new Audio('/sounds/swoosh.mp3');
-
-// Set volume levels
-clickSound.volume = 0.2;
-hoverSound.volume = 0.1;
-popSound.volume = 0.15;
-swooshSound.volume = 0.2;
-
-export const playClickSound = () => {
-  clickSound.currentTime = 0;
-  clickSound.play().catch(err => console.log('Audio play failed:', err));
+/**
+ * Play a sound effect from the public sounds directory
+ * @param sound The name of the sound file without extension
+ * @param volume Volume level between 0 and 1
+ */
+export const playSoundEffect = (sound: 'click' | 'hover' | 'pop' | 'swoosh', volume: number = 0.3) => {
+  try {
+    const audio = new Audio(`/sounds/${sound}.mp3`);
+    audio.volume = volume;
+    audio.play().catch(e => {
+      console.log('Error playing sound:', e);
+    });
+  } catch (error) {
+    console.log('Error with sound effect:', error);
+  }
 };
 
-export const playHoverSound = () => {
-  hoverSound.currentTime = 0;
-  hoverSound.play().catch(err => console.log('Audio play failed:', err));
-};
-
-export const playPopSound = () => {
-  popSound.currentTime = 0;
-  popSound.play().catch(err => console.log('Audio play failed:', err));
-};
-
-export const playSwooshSound = () => {
-  swooshSound.currentTime = 0;
-  swooshSound.play().catch(err => console.log('Audio play failed:', err));
-};
+// Named convenience functions
+export const playClickSound = () => playSoundEffect('click');
+export const playHoverSound = () => playSoundEffect('hover');
+export const playPopSound = () => playSoundEffect('pop');
+export const playSwooshSound = () => playSoundEffect('swoosh');

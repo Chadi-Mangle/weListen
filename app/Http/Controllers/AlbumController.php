@@ -24,37 +24,10 @@ class AlbumController extends Controller
                 ],
                 'cover_image' => $album->cover_image ?? '/images/default-album-cover.jpg',
                 'year' => $album->year ?? date('Y'),
-                // 'songs_count' => $album->musics->count(),
-                // 'duration' => $this->calculateDuration($album->musics),
+                'songs_count' => $album->musics->count(),
+                'duration' => $this->calculateDuration($album->musics),
             ];
         });
-
-        $testAlbums = [
-            [
-                'id' => 1,
-                'name' => 'Ultra',
-                'artist' => [
-                    'id' => 1,
-                    'name' => 'Booba'
-                ],
-                'cover_image' => 'https://www.artistikrezo.com/wp-content/uploads/2021/05/ULTRA-BOOBA-585x552-1.jpeg',
-                'year' => 2021,
-                'songs_count' => 15,
-                'duration' => '53 min'
-            ],
-            [
-                'id' => 2,
-                'name' => 'Kamikaze',
-                'artist' => [
-                    'id' => 2,
-                    'name' => 'Eminem'
-                ],
-                'cover_image' => 'https://upload.wikimedia.org/wikipedia/en/6/62/Eminem_-_Kamikaze.jpg',
-                'year' => 2018,
-                'songs_count' => 13,
-                'duration' => '45 min'
-            ]
-        ];
         
         return Inertia::render('welcome', [
             'albums' => $formattedAlbums

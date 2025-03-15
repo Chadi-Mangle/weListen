@@ -1,7 +1,11 @@
 
 import React, { useEffect, useRef } from 'react';
+import { cn } from '@/lib/utils';
 import { Play, Headphones } from 'lucide-react';
 import StarBackground from './StarBackground';
+import { useApp } from '@/contexts/AppContext';
+import { playSoundEffect } from '@/utils/soundEffects';
+import { Link } from '@inertiajs/react';
 
 const HeroSection = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -74,6 +78,7 @@ const HeroSection = () => {
     };
   }, []);
 
+
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background overlay */}
@@ -107,14 +112,18 @@ const HeroSection = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 animate-fade-in [animation-delay:600ms]">
-            <button className="px-8 py-4 bg-gradient-audio rounded-full font-medium hover-scale text-white flex items-center justify-center gap-2 shadow-neon">
+           <Link href={route('app')}> 
+            <button 
+              className="px-8 py-4 bg-gradient-audio rounded-full font-medium hover-scale text-white flex items-center justify-center gap-2 shadow-neon"
+            >
               <Play size={20} />
               Commencer l'écoute
             </button>
-            <button className="px-8 py-4 glass rounded-full font-medium hover-scale flex items-center justify-center gap-2">
+            </Link>
+            {/* <button className="px-8 py-4 glass rounded-full font-medium hover-scale flex items-center justify-center gap-2">
               <Headphones size={20} />
               Explorer les tendances
-            </button>
+            </button> */}
           </div>
         </div>
       </div>
