@@ -14,7 +14,51 @@ import { useApp } from '@/contexts/AppContext';
 import SongManagement from '@/components/SongManagement';
 import AlbumManagement from '@/components/AlbumManagement';
 import AppHeader from '@/components/AppHeader';
-import { useForm } from '@inertiajs/react';
+import { useForm, usePage } from '@inertiajs/react';
+
+// Interfaces pour typer les données
+interface Song {
+  id: string;
+  title: string;
+  description: string;
+  genre: string;
+  releaseDate: string | null;
+  cover: string;
+  songUrl: string | null;
+  duration: string;
+  streams: number | string;
+  created_at: string;
+}
+
+interface Album {
+  id: string;
+  title: string;
+  description: string;
+  cover: string;
+  releaseDate: string | null;
+  songs: { id: string; title: string; duration: string }[];
+  created_at: string;
+}
+
+interface ArtistInfo {
+  name: string;
+  image: string;
+  bio: string;
+  stats: {
+    total_musics?: number;
+    total_albums?: number;
+    followers?: string;
+    tracks?: number;
+    albums?: number;
+    monthlyListeners?: string;
+  };
+}
+
+interface PageProps {
+  songs: Song[];
+  albums: Album[];
+  artistInfo: ArtistInfo;
+}
 
 const CreatorDashboard = () => {
   const [hoveredTrack, setHoveredTrack] = useState<string | null>(null);
@@ -29,14 +73,29 @@ const CreatorDashboard = () => {
     audio_file: null as File | null,
     cover_image: null as File | null,
   });
+  
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const [showSongManagement, setShowSongManagement] = useState(false);
   const [showAlbumManagement, setShowAlbumManagement] = useState(false);
   
-  const { toast } = useToast();
-  const { songs, albums } = useApp();
+  // Récupérer les données de la page via Inertia
+  const { props } = usePage<PageProps>();
+  const { songs = [], albums = [], artistInfo = { 
+    name: '',
+    image: '/default-artist.jpg',
+    bio: '',
+    stats: {
+      followers: '0',
+      tracks: 0,
+      albums: 0,
+      monthlyListeners: '0'
+    }
+  }} = props;
   
+  const { toast } = useToast();
+  
+  // Définir les valeurs par défaut pour les animations même si les données ne sont pas chargées
   const container = {
     hidden: { opacity: 0 },
     show: {
@@ -80,7 +139,6 @@ const CreatorDashboard = () => {
   const handleUpload = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Ajoutez ce logging pour confirmer les données avant envoi
     console.log("Données avant envoi:", {
       title: data.title,
       audioFile: data.audio_file ? data.audio_file.name : null,
@@ -88,7 +146,7 @@ const CreatorDashboard = () => {
     });
     
     post(route('songs.store'), {
-      forceFormData: true, // Ajoutez cette option importante!
+      forceFormData: true,
       onSuccess: () => {
         setTimeout(() => {
           reset();
@@ -100,7 +158,6 @@ const CreatorDashboard = () => {
         }, 500);
       },
       onError: (errors) => {
-        // Ajoutez ce logging pour voir les erreurs détaillées
         console.error("Erreurs d'upload:", errors);
         toast({
           title: "Erreur lors du téléchargement",
@@ -111,26 +168,34 @@ const CreatorDashboard = () => {
     });
   };
   
-  const artistInfo = {
-    name: "Your Artist Name",
-    image: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=2070&auto=format&fit=crop",
-    bio: "Artiste indépendant explorant les frontières sonores entre l'électronique, le hip-hop et la musique ambiante. Basé à Paris, je cherche à créer des paysages sonores qui racontent des histoires.",
-    stats: {
-      followers: "3.5K",
-      tracks: 24,
-      albums: 3,
-      monthlyListeners: "8.2K"
-    }
+  // Utiliser les informations de l'artiste depuis les props avec des valeurs par défaut
+  const formattedStats = {
+    albumCount: artistInfo?.stats?.followers || 0,
+    tracks: artistInfo?.stats?.total_musics || artistInfo?.stats?.tracks || 0,
+    likes: artistInfo?.stats?.total_albums || artistInfo?.stats?.albums || 0,
   };
   
-  const topTracks = songs.slice(0, 4);
-
-  const recentUploads = [
-    { title: 'Freestyle #12', date: '15 juin 2023', streams: '45K', cover: 'https://i.scdn.co/image/ab67616d00001e02b0fe40a6e1692822115acfce' },
-    { title: 'En direct du tier', date: '2 mai 2023', streams: '120K', cover: 'https://i.scdn.co/image/ab67616d00001e02a8142ce89cebb0da0505a2a5' },
-    { title: 'Ratpi World', date: '20 avril 2023', streams: '350K', cover: 'https://i.scdn.co/image/ab67616d00001e022dafecade03c775ac1c1fbf0' },
-  ];
+  // Utiliser les chansons les plus récentes pour l'affichage
+  const topTracks = songs?.slice(0, 4) || [];
   
+  // Utiliser les données réelles au lieu des données statiques
+  const recentUploads = songs?.slice(0, 3).map(song => ({
+    id: song.id,
+    title: song.title,
+    date: song.created_at,
+    streams: song.streams?.toString() || '0',
+    cover: song.cover
+  })) || [];
+  
+  // Vérifier si les données sont disponibles avant de rendre la page
+  if (!artistInfo || !songs || !albums) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-audio-accent"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen overflow-x-hidden pb-20">
       <AppHeader />
@@ -157,7 +222,7 @@ const CreatorDashboard = () => {
           name={artistInfo.name}
           image={artistInfo.image}
           bio={artistInfo.bio}
-          stats={artistInfo.stats}
+          stats={formattedStats}
         />
 
         <Tabs defaultValue="overview" className="mb-8">
@@ -274,7 +339,7 @@ const CreatorDashboard = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {recentUploads.map((upload, index) => (
                   <motion.div
-                    key={index}
+                    key={upload.id}
                     variants={item}
                     className="backdrop-blur-sm border border-white/5 rounded-lg overflow-hidden hover:shadow-lg hover:shadow-audio-accent/5 transition-shadow duration-300"
                     whileHover={{ y: -4, transition: { duration: 0.2 } }}
@@ -352,7 +417,7 @@ const CreatorDashboard = () => {
                           </div>
                           <div>
                             <h3 className="font-medium text-sm">{track.title}</h3>
-                            <p className="text-xs text-audio-light/60">streams</p>
+                            <p className="text-xs text-audio-light/60">{typeof track.streams === 'number' ? track.streams.toLocaleString() : track.streams} écoutes</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-6">

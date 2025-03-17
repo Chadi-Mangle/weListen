@@ -65,7 +65,7 @@ function AvatarUpload({ user, size = 'xl', showButton = true }: AvatarUploadProp
 
   const [previewImage, setPreviewImage] = React.useState<string>(
     user.avatar
-      ? `/storage/${user.avatar}`
+      ? user.avatar
       : '/default-avatar.png'
   );
 
@@ -185,7 +185,7 @@ const UserAvatar = ({ user, size = 'md', className }: UserAvatarProps) => {
   };
 
   const avatarSrc = user.avatar 
-    ? `/storage/${user.avatar}` 
+    ? user.avatar 
     : '/default-avatar.png';
 
   return (

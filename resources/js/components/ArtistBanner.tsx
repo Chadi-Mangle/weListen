@@ -1,20 +1,19 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Users, Music, Clock, PlayCircle, Heart, Share2, PencilLine, X, Image, Upload } from 'lucide-react';
+import { Users, Music, Clock, PlayCircle, Heart, Share2, PencilLine, X, Image, Upload, Disc, Disc2, Disc2Icon, DiscAlbum, Disc3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { useForm } from '@inertiajs/react';
 
 interface ArtistBannerProps {
   name: string;
   image: string;
   bio: string;
   stats: {
-    followers: string;
+    albumCount: number;
     tracks: number;
-    albums: number;
-    monthlyListeners: string;
+    likes: number;
   };
 }
 
@@ -25,13 +24,35 @@ const ArtistBanner: React.FC<ArtistBannerProps> = ({ name, image, bio, stats }) 
   const [showCoverPhotoModal, setShowCoverPhotoModal] = useState(false);
   const { toast } = useToast();
 
+  const { data, setData, post, processing, errors } = useForm({
+    bio: bio
+  });
+
   const handleBioSave = () => {
-    setIsEditingBio(false);
-    toast({
-      title: "Biographie mise à jour",
-      description: "Vos modifications ont été enregistrées avec succès.",
+    // Mettre à jour la donnée du formulaire avec la valeur éditée
+    setData('bio', editedBio);
+    
+    // Envoyer le formulaire avec Inertia
+    post(route('app.creator.bio'), {
+      preserveScroll: true,
+      onSuccess: () => {
+        setIsEditingBio(false);
+        toast({
+          title: "Biographie mise à jour",
+          description: "Vos modifications ont été enregistrées avec succès.",
+        });
+      },
+      onError: (errors) => {
+        console.error("Erreurs:", errors);
+        toast({
+          title: "Erreur",
+          description: errors.bio || "Impossible de mettre à jour votre biographie. Veuillez réessayer.",
+          variant: "destructive"
+        });
+      }
     });
   };
+
 
   return (
     <motion.div
@@ -83,16 +104,16 @@ const ArtistBanner: React.FC<ArtistBannerProps> = ({ name, image, bio, stats }) 
               <h1 className="text-3xl md:text-5xl font-bold text-audio-light mb-2">{name}</h1>
               <div className="flex items-center gap-4 text-sm text-audio-light/60">
                 <div className="flex items-center gap-1">
-                  <Users size={14} />
-                  <span>{stats.followers} abonnés</span>
+                  <Disc3 size={14} />
+                  <span>{stats.albumCount} albums</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <Music size={14} />
                   <span>{stats.tracks} titres</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <Clock size={14} />
-                  <span>{stats.monthlyListeners} écoutes mensuelles</span>
+                  <Heart size={14} />
+                  <span>{stats.likes} likes</span>
                 </div>
               </div>
             </div>

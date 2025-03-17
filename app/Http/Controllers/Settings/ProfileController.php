@@ -74,7 +74,7 @@ class ProfileController extends Controller
             
             // Mettre à jour l'utilisateur
             $request->user()->update([
-                'avatar' => $path,
+                'avatar' => '/storage/' . $path,
             ]);
             
             return redirect()->back();
@@ -103,6 +103,6 @@ class ProfileController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect('/');
+        return redirect()->to('/');
     }
 }

@@ -15,9 +15,9 @@ Route::middleware('auth')->group(function () {
         return Inertia::render('app/ConsumerDashboard');
     })->name('app.consumer');
 
-    Route::get('/app/creator', function () {
-        return Inertia::render('app/CreatorDashboard');
-    })->name('app.creator');
-
+});
+Route::middleware('auth')->group(function () {
+    Route::get('/app/creator', [AppController::class, 'creator'])->name('app.creator');
+    Route::post('/creator/bio', [AppController::class, 'bio'])->name('app.creator.bio');
     Route::post('/songs/store', [AppController::class, 'store'])->name('songs.store');
 });
