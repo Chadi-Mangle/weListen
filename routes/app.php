@@ -4,17 +4,6 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\AppController;
 
-/*
-|--------------------------------------------------------------------------
-| Application Routes
-|--------------------------------------------------------------------------
-|
-| Ces routes gèrent toutes les fonctionnalités principales de l'application WeListen
-| accessibles depuis le préfixe /app. Elles incluent la sélection du rôle
-| (auditeur ou créateur) et les fonctionnalités spécifiques à chaque rôle.
-|
-*/
-
 // Page de sélection du rôle
 Route::get('/app', function () {
     return Inertia::render('app/index');
@@ -29,4 +18,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/app/creator', function () {
         return Inertia::render('app/CreatorDashboard');
     })->name('app.creator');
+
+    Route::post('/songs/store', [AppController::class, 'store'])->name('songs.store');
 });

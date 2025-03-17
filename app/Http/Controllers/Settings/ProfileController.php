@@ -77,8 +77,6 @@ class ProfileController extends Controller
                 'avatar' => $path,
             ]);
             
-            Log::info('Avatar mis à jour avec succès: ' . $path);
-            
             return redirect()->back();
         } catch (\Exception $e) {
             Log::error('Erreur lors de la mise à jour de l\'avatar: ' . $e->getMessage());

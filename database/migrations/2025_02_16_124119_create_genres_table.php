@@ -11,16 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('playlists', function (Blueprint $table) {
+        Schema::create('genres', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->text('description')->nullable();
-            $table->string('cover_image')->nullable();
-            $table->date('release_date')->default(now());
-            $table->string('type')->default('playlist');
-            $table->boolean('is_public')->default(true);
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('genre_id')->nullable()->constrained();
+            $table->foreignId('parent_id')->nullable()->constrained('genres')->onDelete('set null');
             $table->timestamps();
         });
     }
@@ -30,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('playlists');
+        Schema::dropIfExists('genres');
     }
 };

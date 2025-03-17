@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import AppHeader from '@/components/AppHeader';
 
 // Composant qui utilise le contexte
 const ConsumerDashboardContent = () => {
@@ -17,9 +18,6 @@ const ConsumerDashboardContent = () => {
   const [activeTab, setActiveTab] = useState("discover");
   const [hoveredTrack, setHoveredTrack] = useState<string | null>(null);
 
-  useEffect(() => {
-    document.title = 'WeListen - Votre espace';
-  }, []);
 
   const handleCreatePlaylist = () => {
     if (newPlaylistName.trim() !== '') {
@@ -130,6 +128,7 @@ const ConsumerDashboardContent = () => {
 
   return (
     <div className="min-h-screen overflow-x-hidden pb-20">
+      <AppHeader />
       {/* Background elements */}
       <div className="absolute inset-0 overflow-hidden -z-10">
         <div className="absolute inset-0 bg-gradient-to-b from-audio-dark via-audio-dark/95 to-audio-dark"></div>
@@ -247,7 +246,7 @@ const ConsumerDashboardContent = () => {
                         alt={playlist.name}
                         className="w-full h-full object-cover rounded-lg"
                       />
-                      {/* <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div> */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                         <button 
                           className="w-12 h-12 rounded-full bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center hover:bg-audio-accent/80 transition-colors"

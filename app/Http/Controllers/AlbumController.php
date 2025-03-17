@@ -14,21 +14,8 @@ class AlbumController extends Controller
         $albums = Album::with(['artist', 'musics'])->get();
         
         // Transformer les données pour qu'elles correspondent à l'interface attendue par le front
-        $formattedAlbums = $albums->map(function ($album) {
-            return [
-                'id' => $album->id,
-                'name' => $album->name,
-                'artist' => [
-                    'id' => $album->artist->id,
-                    'name' => $album->artist->name,
-                ],
-                'cover_image' => $album->cover_image ?? '/images/default-album-cover.jpg',
-                'year' => $album->year ?? date('Y'),
-                'songs_count' => $album->musics->count(),
-                'duration' => $this->calculateDuration($album->musics),
-            ];
-        });
-        
+        $formattedAlbums = $albums->map->formatted_for_list;
+
         return Inertia::render('welcome', [
             'albums' => $formattedAlbums
         ]);
@@ -39,27 +26,7 @@ class AlbumController extends Controller
         $album = Album::with(['artist', 'musics'])->findOrFail($id);
         
         return Inertia::render('Albums/Show', [
-            'album' => [
-                'id' => $album->id,
-                'name' => $album->name,
-                'artist' => [
-                    'id' => $album->artist->id,
-                    'name' => $album->artist->name,
-                ],
-                'cover_image' => $album->cover_image ?? '/images/default-album-cover.jpg',
-                'description' => $album->description,
-                'year' => $album->year ?? date('Y'),
-                'songs' => $album->musics->map(function ($music) {
-                    return [
-                        'id' => $music->id,
-                        'title' => $music->title,
-                        'duration' => $music->duration,
-                        'artist' => $music->user->name,
-                        'position' => $music->pivot->position
-                    ];
-                }),
-                'duration' => $this->calculateDuration($album->musics),
-            ]
+            'album' => $album->formatted_for_detail,
         ]);
     }
 
@@ -80,29 +47,5 @@ class AlbumController extends Controller
         }
         
         return back();
-    }
-
-    /**
-     * Calcule la durée totale d'un album en fonction des musiques qu'il contient
-     */
-    private function calculateDuration($musics)
-    {
-        $totalSeconds = $musics->sum(function($music) {
-            // Si la durée est au format MM:SS, on la convertit en secondes
-            if (strpos($music->duration, ':') !== false) {
-                list($minutes, $seconds) = explode(':', $music->duration);
-                return ($minutes * 60) + $seconds;
-            }
-            return $music->duration ?? 0;
-        });
-        
-        $hours = floor($totalSeconds / 3600);
-        $minutes = floor(($totalSeconds % 3600) / 60);
-        
-        if ($hours > 0) {
-            return sprintf("%dh %dmin", $hours, $minutes);
-        }
-        
-        return sprintf("%d min", $minutes);
     }
 }

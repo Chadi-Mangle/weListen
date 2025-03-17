@@ -10,31 +10,32 @@ import StarBackground from '@/components/StarBackground';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
 import ArtistBanner from '@/components/ArtistBanner';
-import { useApp, AppProvider } from '@/contexts/AppContext';
-import { router } from '@inertiajs/react';
+import { useApp } from '@/contexts/AppContext';
+import SongManagement from '@/components/SongManagement';
+import AlbumManagement from '@/components/AlbumManagement';
+import AppHeader from '@/components/AppHeader';
+import { useForm } from '@inertiajs/react';
 
-// Composant qui utilise le contexte
-const CreatorDashboardContent = () => {
+const CreatorDashboard = () => {
   const [hoveredTrack, setHoveredTrack] = useState<string | null>(null);
   const [showUploadForm, setShowUploadForm] = useState(false);
-  const [uploadFormData, setUploadFormData] = useState({
+  
+  const { data, setData, post, processing, progress, errors, reset } = useForm({
     title: '',
     description: '',
     releaseDate: '',
-    duration: '',
-    tags: '',
     genre: '',
-    explicit: false
+    explicit: false,
+    audio_file: null as File | null,
+    cover_image: null as File | null,
   });
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
-  const { toast } = useToast();
-  const { userRole, setUserRole } = useApp();
+  const [showSongManagement, setShowSongManagement] = useState(false);
+  const [showAlbumManagement, setShowAlbumManagement] = useState(false);
   
-  const handleRoleSwitch = () => {
-    setUserRole('consumer');
-    router.visit('/app/consumer');
-  };
+  const { toast } = useToast();
+  const { songs, albums } = useApp();
   
   const container = {
     hidden: { opacity: 0 },
@@ -63,53 +64,53 @@ const CreatorDashboardContent = () => {
     
     if (type === 'checkbox') {
       const target = e.target as HTMLInputElement;
-      setUploadFormData({
-        ...uploadFormData,
-        [name]: target.checked
-      });
+      setData(name as any, target.checked);
+    } else if (type === 'file') {
+      const target = e.target as HTMLInputElement;
+      const files = target.files;
+      
+      if (files && files.length > 0) {
+        setData(name as any, files[0]);
+      }
     } else {
-      setUploadFormData({
-        ...uploadFormData,
-        [name]: value
-      });
+      setData(name as any, value);
     }
   };
 
   const handleUpload = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsUploading(true);
     
-    // Simuler le téléchargement
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += 5;
-      setUploadProgress(progress);
-      
-      if (progress >= 100) {
-        clearInterval(interval);
+    // Ajoutez ce logging pour confirmer les données avant envoi
+    console.log("Données avant envoi:", {
+      title: data.title,
+      audioFile: data.audio_file ? data.audio_file.name : null,
+      coverImage: data.cover_image ? data.cover_image.name : null
+    });
+    
+    post(route('songs.store'), {
+      forceFormData: true, // Ajoutez cette option importante!
+      onSuccess: () => {
         setTimeout(() => {
-          setIsUploading(false);
+          reset();
           setShowUploadForm(false);
-          setUploadProgress(0);
-          setUploadFormData({
-            title: '',
-            description: '',
-            releaseDate: '',
-            duration: '',
-            tags: '',
-            genre: '',
-            explicit: false
-          });
           toast({
             title: "Titre téléchargé avec succès",
-            description: `"${uploadFormData.title}" est maintenant disponible à l'écoute.`,
+            description: `"${data.title}" est maintenant disponible à l'écoute.`
           });
         }, 500);
+      },
+      onError: (errors) => {
+        // Ajoutez ce logging pour voir les erreurs détaillées
+        console.error("Erreurs d'upload:", errors);
+        toast({
+          title: "Erreur lors du téléchargement",
+          description: "Veuillez vérifier vos données et réessayer.",
+          variant: "destructive"
+        });
       }
-    }, 100);
+    });
   };
   
-  // Informations de l'artiste
   const artistInfo = {
     name: "Your Artist Name",
     image: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=2070&auto=format&fit=crop",
@@ -122,15 +123,8 @@ const CreatorDashboardContent = () => {
     }
   };
   
-  // Mock data for top tracks
-  const topTracks = [
-    { id: '1', title: 'DKR', streams: '850K', duration: '3:15', cover: 'https://i1.sndcdn.com/artworks-000224127351-494034-t500x500.jpg' },
-    { id: '2', title: 'GIMS', streams: '720K', duration: '4:05', cover: 'https://i1.sndcdn.com/artworks-sLK6Oe4dvKWLvVLB-U8S6mg-t500x500.jpg' },
-    { id: '3', title: 'Longueur d\'avance', streams: '540K', duration: '2:55', cover: 'https://cdn.alza.cz/Foto/ImgGalery/Image/booba-ultra-cover.jpg' },
-    { id: '4', title: 'Pitbull', streams: '480K', duration: '3:45', cover: 'https://pbs.twimg.com/media/D9XTKcYWwAEAA0W.jpg' },
-  ];
+  const topTracks = songs.slice(0, 4);
 
-  // Mock data for recent uploads
   const recentUploads = [
     { title: 'Freestyle #12', date: '15 juin 2023', streams: '45K', cover: 'https://i.scdn.co/image/ab67616d00001e02b0fe40a6e1692822115acfce' },
     { title: 'En direct du tier', date: '2 mai 2023', streams: '120K', cover: 'https://i.scdn.co/image/ab67616d00001e02a8142ce89cebb0da0505a2a5' },
@@ -139,32 +133,26 @@ const CreatorDashboardContent = () => {
   
   return (
     <div className="min-h-screen overflow-x-hidden pb-20">
-      {/* Background elements with enhanced synthwave effect */}
+      <AppHeader />
       <div className="absolute inset-0 overflow-hidden -z-10">
         <div className="absolute inset-0 bg-gradient-to-b from-audio-dark via-audio-dark/95 to-audio-dark"></div>
         <StarBackground intensity={0.3} speed={0.2} />
         
-        {/* Enhanced Synthwave Background */}
         <div className="absolute bottom-0 left-0 right-0 h-full pointer-events-none overflow-hidden">
-          {/* Horizontal neon lines */}
           <div className="absolute bottom-0 w-full h-[1px] bg-gradient-to-r from-transparent via-audio-accent/50 to-transparent animate-pulse-soft"></div>
           <div className="absolute bottom-4 w-full h-[1px] bg-gradient-to-r from-transparent via-purple-500/40 to-transparent animate-pulse-soft" style={{animationDelay: '0.3s'}}></div>
           <div className="absolute bottom-8 w-full h-[1px] bg-gradient-to-r from-transparent via-audio-accent/30 to-transparent animate-pulse-soft" style={{animationDelay: '0.6s'}}></div>
           
-          {/* Vertical neon lines */}
           <div className="absolute top-0 bottom-0 left-1/4 w-[1px] bg-gradient-to-b from-transparent via-purple-500/20 to-transparent animate-pulse-soft" style={{animationDelay: '0.9s'}}></div>
           <div className="absolute top-0 bottom-0 right-1/4 w-[1px] bg-gradient-to-b from-transparent via-audio-accent/20 to-transparent animate-pulse-soft" style={{animationDelay: '1.2s'}}></div>
           
-          {/* Glowing orbs */}
           <div className="absolute bottom-1/4 left-1/4 w-48 h-48 rounded-full bg-purple-500/5 blur-3xl animate-pulse-soft"></div>
           <div className="absolute top-1/3 right-1/3 w-64 h-64 rounded-full bg-audio-accent/5 blur-3xl animate-pulse-soft" style={{animationDelay: '0.8s'}}></div>
           <div className="absolute top-1/2 left-1/3 w-32 h-32 rounded-full bg-indigo-500/5 blur-3xl animate-pulse-soft" style={{animationDelay: '1.5s'}}></div>
         </div>
       </div>
       
-      {/* Content */}
       <div className="max-w-6xl mx-auto relative pt-6">
-        {/* Artist Banner */}
         <ArtistBanner 
           name={artistInfo.name}
           image={artistInfo.image}
@@ -172,9 +160,8 @@ const CreatorDashboardContent = () => {
           stats={artistInfo.stats}
         />
 
-        {/* Tabs navigation - Updated styling to match Apple design */}
         <Tabs defaultValue="overview" className="mb-8">
-          <TabsList className="bg-transparent backdrop-blur-sm p-1 border border-white/10 rounded-full overflow-hidden">
+          <TabsList className="mx-auto w-fit bg-black/10 backdrop-blur-sm p-1 border border-white/10 rounded-full overflow-hidden">
             <TabsTrigger 
               value="overview" 
               className="rounded-full px-4 text-xs font-medium data-[state=active]:bg-audio-accent/10 data-[state=active]:text-audio-accent data-[state=active]:backdrop-blur-md data-[state=active]:shadow-glow"
@@ -189,9 +176,7 @@ const CreatorDashboardContent = () => {
             </TabsTrigger>
           </TabsList>
 
-          {/* Tab Content: Overview */}
           <TabsContent value="overview" className="mt-6 px-6">
-            {/* Quick actions */}
             <motion.section 
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
@@ -214,7 +199,61 @@ const CreatorDashboardContent = () => {
               </div>
             </motion.section>
             
-            {/* Recent uploads section */}
+            {albums.length > 0 && (
+              <motion.section
+                variants={container}
+                initial="hidden"
+                animate="show" 
+                className="mb-8"
+              >
+                <div className="flex items-center justify-between mb-5">
+                  <h2 className="text-xl font-medium">Vos albums</h2>
+                  <button 
+                    className="text-audio-accent hover:text-audio-accent-light flex items-center gap-1 text-sm"
+                    onClick={() => setShowAlbumManagement(true)}
+                  >
+                    Gérer <ArrowUpRight size={14} />
+                  </button>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {albums.map((album, index) => (
+                    <motion.div
+                      key={album.id}
+                      variants={item}
+                      className="backdrop-blur-sm border border-white/5 rounded-lg overflow-hidden hover:shadow-lg hover:shadow-audio-accent/5 transition-shadow duration-300"
+                      whileHover={{ y: -4, transition: { duration: 0.2 } }}
+                    >
+                      <div className="relative aspect-square">
+                        <img 
+                          src={album.cover} 
+                          alt={album.title} 
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                          <button 
+                            className="w-10 h-10 rounded-full bg-audio-accent/90 flex items-center justify-center hover:bg-audio-accent transition-colors"
+                            onClick={() => playSoundEffect('click')}
+                          >
+                            <Play size={18} fill="white" className="text-white ml-0.5" />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="p-3">
+                        <h3 className="font-medium text-base">{album.title}</h3>
+                        <div className="flex justify-between items-center mt-2 text-audio-light/60 text-xs">
+                          <div className="flex items-center gap-1">
+                            <Music size={12} />
+                            <span>{album.songs.length} titre{album.songs.length !== 1 ? 's' : ''}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.section>
+            )}
+            
             <motion.section
               variants={container}
               initial="hidden"
@@ -273,7 +312,6 @@ const CreatorDashboardContent = () => {
               </div>
             </motion.section>
             
-            {/* Top tracks - Fixed transparent background */}
             <section>
               <div className="flex items-center justify-between mb-5">
                 <h2 className="text-xl font-medium">Titres populaires</h2>
@@ -314,7 +352,7 @@ const CreatorDashboardContent = () => {
                           </div>
                           <div>
                             <h3 className="font-medium text-sm">{track.title}</h3>
-                            <p className="text-xs text-audio-light/60">{track.streams} streams</p>
+                            <p className="text-xs text-audio-light/60">streams</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-6">
@@ -331,7 +369,6 @@ const CreatorDashboardContent = () => {
             </section>
           </TabsContent>
 
-          {/* Upload tab content - Improved with transparent styling */}
           <TabsContent value="uploads" className="mt-6 px-6">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-xl font-medium">Vos titres</h2>
@@ -349,15 +386,16 @@ const CreatorDashboardContent = () => {
               </Button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-8">
               <Card className="flex flex-col items-center justify-center p-6 h-48 backdrop-blur-sm bg-transparent border-dashed border-white/10">
                 <Music size={32} className="text-audio-light/30 mb-2" />
                 <h3 className="text-base font-medium text-audio-light/70 mb-1">Musique</h3>
                 <p className="text-xs text-audio-light/50 text-center mb-4">Tous vos titres musicaux</p>
                 <Button 
-                  variant="outline" 
+                  variant="accent" 
                   size="pill"
-                  className="text-xs"
+                  className="text-xs shadow-glow"
+                  onClick={() => setShowSongManagement(true)}
                 >
                   Gérer
                 </Button>
@@ -368,22 +406,10 @@ const CreatorDashboardContent = () => {
                 <h3 className="text-base font-medium text-audio-light/70 mb-1">Albums</h3>
                 <p className="text-xs text-audio-light/50 text-center mb-4">Vos compilations et albums</p>
                 <Button 
-                  variant="outline" 
+                  variant="accent" 
                   size="pill"
-                  className="text-xs"
-                >
-                  Gérer
-                </Button>
-              </Card>
-              
-              <Card className="flex flex-col items-center justify-center p-6 h-48 backdrop-blur-sm bg-transparent border-dashed border-white/10">
-                <List size={32} className="text-audio-light/30 mb-2" />
-                <h3 className="text-base font-medium text-audio-light/70 mb-1">Playlists</h3>
-                <p className="text-xs text-audio-light/50 text-center mb-4">Vos playlists personnalisées</p>
-                <Button 
-                  variant="outline" 
-                  size="pill"
-                  className="text-xs"
+                  className="text-xs shadow-glow"
+                  onClick={() => setShowAlbumManagement(true)}
                 >
                   Gérer
                 </Button>
@@ -393,7 +419,6 @@ const CreatorDashboardContent = () => {
         </Tabs>
       </div>
 
-      {/* Improved Upload Modal - Apple-inspired design with transparent elements */}
       {showUploadForm && (
         <motion.div 
           className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4"
@@ -418,14 +443,14 @@ const CreatorDashboardContent = () => {
               </button>
             </div>
             
-            <form onSubmit={handleUpload} className="p-5">
-              {isUploading ? (
+            <form onSubmit={handleUpload} className="p-5" encType="multipart/form-data">
+              {processing ? (
                 <div className="text-center py-6">
                   <div className="mb-4">
-                    <Progress value={uploadProgress} className="h-0.5 bg-audio-surface/30" />
-                    <p className="text-xs mt-2 text-audio-light/70">Téléchargement en cours... {uploadProgress}%</p>
+                    <Progress value={progress?.percentage || 0} className="h-0.5 bg-audio-surface/30" />
+                    <p className="text-xs mt-2 text-audio-light/70">Téléchargement en cours... {progress?.percentage ? Math.round(progress.percentage) : 0}%</p>
                   </div>
-                  {uploadProgress === 100 && (
+                  {(progress?.percentage || 0) === 100 && (
                     <motion.div
                       initial={{ scale: 0.8, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
@@ -445,11 +470,12 @@ const CreatorDashboardContent = () => {
                         <input
                           type="text"
                           name="title"
-                          value={uploadFormData.title}
+                          value={data.title}
                           onChange={handleInputChange}
-                          className="w-full bg-audio-surface/20 border border-white/10 rounded-md px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-audio-accent/50"
+                          className={`w-full bg-audio-surface/20 border ${errors.title ? 'border-red-500' : 'border-white/10'} rounded-md px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-audio-accent/50`}
                           required
                         />
+                        {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title}</p>}
                       </div>
                       
                       <div className="col-span-2 md:col-span-1">
@@ -457,9 +483,9 @@ const CreatorDashboardContent = () => {
                         <div className="relative">
                           <select
                             name="genre"
-                            value={uploadFormData.genre}
+                            value={data.genre}
                             onChange={handleInputChange}
-                            className="w-full bg-audio-surface/20 border border-white/10 rounded-md px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-audio-accent/50 text-audio-light appearance-none"
+                            className={`w-full bg-audio-surface/20 border ${errors.genre ? 'border-red-500' : 'border-white/10'} rounded-md px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-audio-accent/50 text-audio-light appearance-none`}
                             required
                           >
                             <option value="" className="bg-audio-dark text-audio-light">Sélectionner</option>
@@ -472,6 +498,7 @@ const CreatorDashboardContent = () => {
                             <option value="other" className="bg-audio-dark text-audio-light">Autre</option>
                           </select>
                           <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-audio-light/50 pointer-events-none" />
+                          {errors.genre && <p className="text-red-500 text-xs mt-1">{errors.genre}</p>}
                         </div>
                       </div>
                     </div>
@@ -480,88 +507,122 @@ const CreatorDashboardContent = () => {
                       <label className="block text-xs text-audio-light/70 mb-1">Description</label>
                       <textarea
                         name="description"
-                        value={uploadFormData.description}
+                        value={data.description}
                         onChange={handleInputChange}
-                        className="w-full bg-audio-surface/20 border border-white/10 rounded-md px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-audio-accent/50 min-h-[60px] resize-none"
+                        className={`w-full bg-audio-surface/20 border ${errors.description ? 'border-red-500' : 'border-white/10'} rounded-md px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-audio-accent/50 min-h-[60px] resize-none`}
                       />
+                      {errors.description && <p className="text-red-500 text-xs mt-1">{errors.description}</p>}
                     </div>
                     
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-xs text-audio-light/70 mb-1">Date de sortie *</label>
+                        <label className="block text-xs text-audio-light/70 mb-1">Date de sortie</label>
                         <input
                           type="date"
                           name="releaseDate"
-                          value={uploadFormData.releaseDate}
+                          value={data.releaseDate}
                           onChange={handleInputChange}
-                          className="w-full bg-audio-surface/20 border border-white/10 rounded-md px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-audio-accent/50"
-                          required
+                          className={`w-full bg-audio-surface/20 border ${errors.releaseDate ? 'border-red-500' : 'border-white/10'} rounded-md px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-audio-accent/50`}
                         />
+                        {errors.releaseDate && <p className="text-red-500 text-xs mt-1">{errors.releaseDate}</p>}
                       </div>
                       
-                      <div>
-                        <label className="block text-xs text-audio-light/70 mb-1">Durée *</label>
+                      <div className="flex items-center space-x-2 pt-4">
                         <input
-                          type="text"
-                          name="duration"
-                          value={uploadFormData.duration}
+                          type="checkbox"
+                          id="explicit"
+                          name="explicit"
+                          checked={data.explicit as boolean}
                           onChange={handleInputChange}
-                          placeholder="Ex: 3:45"
-                          className="w-full bg-audio-surface/20 border border-white/10 rounded-md px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-audio-accent/50"
-                          required
+                          className="mr-2 h-3.5 w-3.5"
                         />
+                        <label htmlFor="explicit" className="text-xs text-audio-light/70">Contenu explicite</label>
                       </div>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-xs text-audio-light/70 mb-1">Tags (séparés par des virgules)</label>
-                      <input
-                        type="text"
-                        name="tags"
-                        value={uploadFormData.tags}
-                        onChange={handleInputChange}
-                        placeholder="Ex: hip-hop, rap français, summer"
-                        className="w-full bg-audio-surface/20 border border-white/10 rounded-md px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-audio-accent/50"
-                      />
-                    </div>
-                    
-                    <div className="flex items-center">
-                      <input
-                        type="checkbox"
-                        id="explicit"
-                        name="explicit"
-                        checked={uploadFormData.explicit}
-                        onChange={(e) => handleInputChange(e as any)}
-                        className="mr-2 h-3.5 w-3.5"
-                      />
-                      <label htmlFor="explicit" className="text-xs text-audio-light/70">Contenu explicite</label>
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
                       <div className="space-y-1">
                         <label className="block text-xs text-audio-light/70 mb-1">Fichier audio *</label>
-                        <div className="border border-dashed border-white/10 rounded-md p-4 text-center">
-                          <MusicIcon size={20} className="mx-auto mb-2 text-audio-light/40" />
-                          <button 
-                            type="button"
-                            className="px-3 py-1 border border-audio-accent/30 bg-transparent text-audio-accent rounded-full text-xs hover:bg-audio-accent/10 transition-colors"
-                          >
-                            Parcourir
-                          </button>
+                        <div className={`border border-dashed ${errors.audio_file ? 'border-red-500' : data.audio_file ? 'border-audio-accent' : 'border-white/10'} rounded-md p-4 text-center`}>
+                          {!data.audio_file ? (
+                            <>
+                              <MusicIcon size={20} className="mx-auto mb-2 text-audio-light/40" />
+                              <label className="cursor-pointer">
+                                <input
+                                  type="file"
+                                  name="audio_file"
+                                  accept="audio/*"
+                                  onChange={(e) => setData('audio_file', e.target.files?.[0] || null)}
+                                  className="hidden"
+                                  required
+                                />
+                                <span className="px-3 py-1 border border-audio-accent/30 bg-transparent text-audio-accent rounded-full text-xs hover:bg-audio-accent/10 transition-colors">
+                                  Parcourir
+                                </span>
+                              </label>
+                            </>
+                          ) : (
+                            <div className="flex flex-col items-center">
+                              <CheckCircle2 className="text-audio-accent mb-1" size={18} />
+                              <p className="text-xs truncate max-w-full">
+                                {data.audio_file.name}
+                              </p>
+                              <button
+                                type="button"
+                                className="text-xs text-audio-light/60 hover:text-audio-light mt-1"
+                                onClick={() => setData('audio_file', null)}
+                              >
+                                Supprimer
+                              </button>
+                            </div>
+                          )}
                         </div>
+                        {errors.audio_file && <p className="text-red-500 text-xs mt-1">{errors.audio_file}</p>}
                       </div>
                       
                       <div className="space-y-1">
                         <label className="block text-xs text-audio-light/70 mb-1">Image de couverture *</label>
-                        <div className="border border-dashed border-white/10 rounded-md p-4 text-center">
-                          <Image size={20} className="mx-auto mb-2 text-audio-light/40" />
-                          <button 
-                            type="button"
-                            className="px-3 py-1 border border-audio-accent/30 bg-transparent text-audio-accent rounded-full text-xs hover:bg-audio-accent/10 transition-colors"
-                          >
-                            Parcourir
-                          </button>
+                        <div className={`border border-dashed ${errors.cover_image ? 'border-red-500' : data.cover_image ? 'border-audio-accent' : 'border-white/10'} rounded-md p-4 text-center relative`}>
+                          {!data.cover_image ? (
+                            <>
+                              <Image size={20} className="mx-auto mb-2 text-audio-light/40" />
+                              <label className="cursor-pointer">
+                                <input
+                                  type="file"
+                                  name="cover_image"
+                                  accept="image/*"
+                                  onChange={(e) => setData('cover_image', e.target.files?.[0] || null)}
+                                  className="hidden"
+                                  required
+                                />
+                                <span className="px-3 py-1 border border-audio-accent/30 bg-transparent text-audio-accent rounded-full text-xs hover:bg-audio-accent/10 transition-colors">
+                                  Parcourir
+                                </span>
+                              </label>
+                            </>
+                          ) : (
+                            <div className="flex flex-col items-center">
+                              <div className="w-12 h-12 mb-1 overflow-hidden rounded">
+                                <img 
+                                  src={URL.createObjectURL(data.cover_image)} 
+                                  alt="Prévisualisation" 
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                              <p className="text-xs truncate max-w-full">
+                                {data.cover_image.name}
+                              </p>
+                              <button
+                                type="button"
+                                className="text-xs text-audio-light/60 hover:text-audio-light mt-1"
+                                onClick={() => setData('cover_image', null)}
+                              >
+                                Supprimer
+                              </button>
+                            </div>
+                          )}
                         </div>
+                        {errors.cover_image && <p className="text-red-500 text-xs mt-1">{errors.cover_image}</p>}
                       </div>
                     </div>
                   </div>
@@ -572,7 +633,10 @@ const CreatorDashboardContent = () => {
                       variant="outline"
                       size="sm"
                       className="text-xs rounded-full border-white/10 hover:bg-white/5"
-                      onClick={() => setShowUploadForm(false)}
+                      onClick={() => {
+                        reset();
+                        setShowUploadForm(false);
+                      }}
                     >
                       Annuler
                     </Button>
@@ -581,8 +645,9 @@ const CreatorDashboardContent = () => {
                       variant="accent" 
                       size="sm"
                       className="text-xs rounded-full shadow-glow"
+                      disabled={processing || !data.title || !data.genre || !data.audio_file || !data.cover_image}
                     >
-                      Télécharger
+                      {processing ? "Téléchargement..." : "Télécharger"}
                     </Button>
                   </div>
                 </>
@@ -592,23 +657,9 @@ const CreatorDashboardContent = () => {
         </motion.div>
       )}
       
-      {/* Enhanced Synthwave neon light effect */}
-      <div className="fixed bottom-0 left-0 right-0 h-[70px] pointer-events-none overflow-hidden opacity-60">
-        <div className="absolute bottom-0 left-[-10%] right-[-10%] h-[300px] bg-gradient-to-t from-purple-500/10 via-audio-accent/5 to-transparent rounded-[100%_100%_0_0] animate-pulse-soft"></div>
-        <div className="absolute bottom-0 w-full h-[1px] bg-gradient-to-r from-transparent via-audio-accent/50 to-transparent animate-pulse-soft"></div>
-        <div className="absolute bottom-3 w-full h-[1px] bg-gradient-to-r from-transparent via-purple-500/30 to-transparent animate-pulse-soft"></div>
-        <div className="absolute bottom-6 w-full h-[1px] bg-gradient-to-r from-transparent via-audio-accent/20 to-transparent animate-pulse-soft" style={{ animationDelay: '0.5s' }}></div>
-      </div>
+      {showSongManagement && <SongManagement onClose={() => setShowSongManagement(false)} />}
+      {showAlbumManagement && <AlbumManagement onClose={() => setShowAlbumManagement(false)} />}
     </div>
-  );
-};
-
-// Composant wrapper qui fournit le contexte
-const CreatorDashboard = () => {
-  return (
-    <AppProvider>
-      <CreatorDashboardContent />
-    </AppProvider>
   );
 };
 

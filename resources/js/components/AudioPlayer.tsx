@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Play, Pause, SkipForward, SkipBack, Volume2, Maximize2 } from 'lucide-react';
 import WaveAnimation from './WaveAnimation';
@@ -25,8 +24,8 @@ const AudioPlayer = () => {
           : "h-72 md:h-96"
       )}
     >
-      {/* Background blur */}
-      <div className="absolute inset-0 glass"></div>
+      {/* Background blur - Ajout d'un z-index négatif pour s'assurer qu'il soit derrière le contenu */}
+      <div className="absolute inset-0 glass -z-10"></div>
       
       {/* Progress bar */}
       <div className="absolute top-0 left-0 right-0 h-1 bg-audio-light/10">
@@ -36,7 +35,7 @@ const AudioPlayer = () => {
         />
       </div>
       
-      <div className="container mx-auto h-full max-w-7xl px-4">
+      <div className="container mx-auto h-full max-w-7xl px-4 relative z-10">
         {/* Compact player - always visible */}
         <div className="h-16 md:h-20 flex items-center justify-between">
           {/* Song info */}
@@ -136,8 +135,8 @@ const AudioPlayer = () => {
 
               <div className="flex flex-col gap-4 mt-6">
                 <div className="flex justify-between text-xs text-audio-light/70">
-                  <span>1:47</span>
-                  <span>4:32</span>
+                  {/* <span>1:47</span>
+                  <span>4:32</span> */}
                 </div>
                 <div className="h-1.5 bg-audio-light/10 rounded-full">
                   <div 

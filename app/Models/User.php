@@ -49,11 +49,6 @@ class User extends Authenticatable
         ];
     }
 
-    public function musics()
-    {
-        return $this->hasMany(Music::class);
-    }
-
     public function likedMusic()
     {
         return $this->belongsToMany(Music::class, 'likes')->withTimestamps();

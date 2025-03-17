@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Disc, Play, Clock, Heart } from 'lucide-react';
 import { playClickSound, playHoverSound } from '@/utils/soundEffects';
@@ -10,6 +10,10 @@ interface AlbumProps {
     id: number;
     name: string;
   };
+  genre: {
+    id: number;
+    name: string;
+  }
   cover_image: string;
   year: number;
   songs_count: number;
@@ -38,7 +42,7 @@ const Album = ({ id, name, artist, cover_image, year, songs_count, duration }: A
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-100px" }}
-      transition={{ duration: 0.5 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
       onMouseEnter={() => {
         setIsHovered(true);
         playHoverSound();
@@ -49,7 +53,7 @@ const Album = ({ id, name, artist, cover_image, year, songs_count, duration }: A
       <div className="aspect-square relative overflow-hidden rounded-xl">
         <motion.img 
           src={cover_image} 
-          alt={`${name} by ${artist.name}`}
+          alt={`${name} by ${artist}`}
           className="w-full h-full object-cover object-center"
           animate={{ scale: isHovered ? 1.1 : 1 }}
           transition={{ duration: 0.3 }}
@@ -115,7 +119,42 @@ const Album = ({ id, name, artist, cover_image, year, songs_count, duration }: A
   );
 };
 
-const AlbumGrid = ({ albums }) => {
+const AlbumGrid = ( { albums = [] } ) => {
+  const [filter, setFilter] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(0);
+  const carouselRef = useRef<HTMLDivElement>(null);
+  
+  const filteredAlbums = filter 
+    ? albums.filter(album => album.genre.name === filter) 
+    : albums;
+  
+  const itemsPerPage = 6;
+  const totalPages = Math.ceil(filteredAlbums.length / itemsPerPage);
+  const displayedAlbums = filteredAlbums.slice(
+    currentPage * itemsPerPage, 
+    (currentPage + 1) * itemsPerPage
+  );
+  
+  const handleNext = () => {
+    playClickSound();
+    if (currentPage < totalPages - 1) {
+      setCurrentPage(prev => prev + 1);
+    }
+  };
+  
+  const handlePrev = () => {
+    playClickSound();
+    if (currentPage > 0) {
+      setCurrentPage(prev => prev - 1);
+    }
+  };
+  
+  const handleFilter = (category: string | null) => {
+    playClickSound();
+    setFilter(category);
+    setCurrentPage(0); // Reset to first page when changing filters
+  };
+  
   return (
     <section id="discover" className="py-20 px-6 relative">
       <div className="absolute inset-0 -z-10">
@@ -130,9 +169,24 @@ const AlbumGrid = ({ albums }) => {
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
             <h2 className="text-4xl font-bold">Albums Populaires</h2>
             <div className="flex gap-2">
-              <button className="px-4 py-2 glass rounded-lg hover:bg-audio-surface-accent transition-colors">Rap FR</button>
-              <button className="px-4 py-2 glass rounded-lg hover:bg-audio-surface-accent transition-colors">Rap US</button>
-              <button className="px-4 py-2 glass rounded-lg hover:bg-audio-surface-accent transition-colors">Tout voir</button>
+              <button 
+                className={`px-4 py-2 rounded-lg transition-all ${filter === 'Rap FR' ? 'bg-audio-accent text-white' : 'glass hover:bg-audio-surface-accent'}`}
+                onClick={() => handleFilter('Rap FR')}
+              >
+                Rap FR
+              </button>
+              <button 
+                className={`px-4 py-2 rounded-lg transition-all ${filter === 'Rap US' ? 'bg-audio-accent text-white' : 'glass hover:bg-audio-surface-accent'}`}
+                onClick={() => handleFilter('Rap US')}
+              >
+                Rap US
+              </button>
+              <button 
+                className={`px-4 py-2 rounded-lg transition-all ${filter === null ? 'bg-audio-accent text-white' : 'glass hover:bg-audio-surface-accent'}`}
+                onClick={() => handleFilter(null)}
+              >
+                Tout voir
+              </button>
             </div>
           </div>
           <p className="text-audio-light/70 max-w-2xl">
@@ -140,14 +194,54 @@ const AlbumGrid = ({ albums }) => {
           </p>
         </div>
         
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
-          {albums.map(album => (
-            <Album key={album.id} {...album} />
-          ))}
+        <div className="relative">
+          {totalPages > 1 && (
+            <>
+              <button 
+                onClick={handlePrev}
+                className={`absolute left-0 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-audio-surface/50 backdrop-blur-sm ${currentPage === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-audio-surface-accent'}`}
+                disabled={currentPage === 0}
+              >
+                <ChevronLeft size={24} />
+              </button>
+              <button 
+                onClick={handleNext}
+                className={`absolute right-0 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-audio-surface/50 backdrop-blur-sm ${currentPage === totalPages - 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-audio-surface-accent'}`}
+                disabled={currentPage === totalPages - 1}
+              >
+                <ChevronRight size={24} />
+              </button>
+            </>
+          )}
+          
+          <div 
+            ref={carouselRef} 
+            className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6"
+          >
+            {displayedAlbums.map(album => (
+              <Album key={album.id} {...album} />
+            ))}
+          </div>
+          
+          {totalPages > 1 && (
+            <div className="flex justify-center mt-8">
+              {Array.from({ length: totalPages }).map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => {
+                    setCurrentPage(index);
+                    playClickSound();
+                  }}
+                  className={`w-2.5 h-2.5 mx-1 rounded-full ${currentPage === index ? 'bg-audio-accent' : 'bg-audio-surface hover:bg-audio-accent/50'}`}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </section>
   );
 };
+
 
 export default AlbumGrid;
