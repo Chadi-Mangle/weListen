@@ -4,7 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
 use JamesHeinrich\GetID3\GetID3;
+
 
 class Music extends Model
 {
@@ -104,7 +106,6 @@ class Music extends Model
         $seconds = floor($this->duration % 60);
         $minutes = floor(($this->duration / 60));
         $duration = sprintf('%02d:%02d', $minutes, $seconds);
-
         return $duration;
     }
 }

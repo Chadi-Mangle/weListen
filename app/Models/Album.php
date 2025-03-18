@@ -38,10 +38,10 @@ class Album extends Playlist
                 'name' => $this->artist->name,
             ],
             'cover_image' => $this->cover_image ?? '/images/default-album-cover.jpg',
-            'genre' => [
+            'genre' => $this->genre ? [
                 'id' => $this->genre->id,
                 'name' => $this->genre->name,
-            ],
+            ] : null,
             'year' => $this->year,
             'songs_count' => $this->musics->count(),
             'duration' => $this->formatted_duration,

@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { playSoundEffect } from '@/utils/soundEffects';
 // Remplacer useNavigate par router d'Inertia
-import { router } from '@inertiajs/react';
+import { router, useForm } from '@inertiajs/react';
 
 interface AlbumCreationFormProps {
   selectedSongs: Song[];
@@ -22,41 +22,69 @@ const AlbumCreationForm: React.FC<AlbumCreationFormProps> = ({ selectedSongs, on
   const { toast } = useToast();
   // Supprimer cette ligne: const navigate = useNavigate();
 
-  const handleCreateAlbum = () => {
-    if (!albumTitle.trim()) {
+  const form = useForm({
+  title: '',
+  cover: null as File | null,
+  songIds: [] as number[]
+});
+
+const handleCreateAlbum = () => {
+  // Validation du titre
+  if (!form.data.title.trim()) {
+    toast({
+      title: "Titre requis",
+      description: "Veuillez saisir un titre pour votre album.",
+      variant: "destructive"
+    });
+    return;
+  }
+  
+  // Validation de l'image
+  if (!form.data.cover) {
+    toast({
+      title: "Image requise",
+      description: "Veuillez sélectionner une image de couverture.",
+      variant: "destructive"
+    });
+    return;
+  }
+  
+  // Préparation des IDs des chansons
+  form.data.songIds = selectedSongs.map(song => song.id);
+  
+  // Soumission du formulaire
+  form.post(route('album.create'), {
+    onSuccess: () => {
+      playSoundEffect('click');
       toast({
-        title: "Titre requis",
-        description: "Veuillez saisir un titre pour votre album.",
+        title: "Album créé avec succès",
+        description: `Votre album "${form.data.title}" a bien été créé.`,
+      });
+      onClose();
+    },
+    onError: (errors) => {
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de la création de l'album.",
         variant: "destructive"
       });
-      return;
-    }
+      console.error(errors);
+    },
+    forceFormData: true
+  });
+};
 
-    const newAlbum: Album = {
-      id: Date.now().toString(),
-      title: albumTitle,
-      cover: albumCover || selectedSongs[0]?.cover || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4',
-      songs: selectedSongs
-    };
+// Pour mettre à jour le titre quand l'utilisateur le modifie
+const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  form.setData('title', e.target.value);
+};
 
-    addAlbum(newAlbum);
-    playSoundEffect('click');
-    
-    toast({
-      title: "Album créé avec succès",
-      description: `Votre album "${albumTitle}" a bien été créé.`,
-    });
-    
-    // Fermer d'abord l'interface modale
-    onClose();
-    
-    // Remplacer navigate par router.visit d'Inertia
-    setTimeout(() => {
-      router.visit(route('creator-dashboard'));
-      // Ou si vous préférez utiliser l'URL directement:
-      // router.visit('/app/creator');
-    }, 100);
-  };
+// Pour mettre à jour l'image quand l'utilisateur la sélectionne
+const handleCoverChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  if (e.target.files && e.target.files[0]) {
+    form.setData('cover', e.target.files[0]);
+  }
+};
 
   return (
     <motion.div 
@@ -88,8 +116,8 @@ const AlbumCreationForm: React.FC<AlbumCreationFormProps> = ({ selectedSongs, on
               <label className="block text-xs text-audio-light/70 mb-1">Titre de l'album *</label>
               <input
                 type="text"
-                value={albumTitle}
-                onChange={(e) => setAlbumTitle(e.target.value)}
+                value={form.data.title}
+                onChange={handleTitleChange}
                 className="w-full bg-audio-surface/20 border border-white/10 rounded-md px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-audio-accent/50"
                 placeholder="Entrez le titre de l'album"
                 required
@@ -98,15 +126,46 @@ const AlbumCreationForm: React.FC<AlbumCreationFormProps> = ({ selectedSongs, on
             
             <div>
               <label className="block text-xs text-audio-light/70 mb-1">Image de couverture</label>
-              <div className="border border-dashed border-white/10 rounded-md p-4 text-center">
+              <div className={`border border-dashed ${albumCover ? 'border-audio-accent' : 'border-white/10'} rounded-md p-4 text-center relative`}>
+              {!albumCover ? (
+                <>
                 <Image size={20} className="mx-auto mb-2 text-audio-light/40" />
-                <input 
-                  type="text"
-                  value={albumCover}
-                  onChange={(e) => setAlbumCover(e.target.value)}
-                  className="w-full bg-audio-surface/20 border border-white/10 rounded-md px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-audio-accent/50 mt-2"
-                  placeholder="URL de l'image de couverture"
-                />
+                <label className="cursor-pointer">
+                  <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setAlbumCover(URL.createObjectURL(file));
+                      handleCoverChange(e);
+                    }
+                  }}
+                  className="hidden"
+                  />
+                  <span className="px-3 py-1 border border-audio-accent/30 bg-transparent text-audio-accent rounded-full text-xs hover:bg-audio-accent/10 transition-colors">
+                  Parcourir
+                  </span>
+                </label>
+                </>
+              ) : (
+                <div className="flex flex-col items-center">
+                <div className="w-12 h-12 mb-1 overflow-hidden rounded">
+                  <img 
+                  src={albumCover} 
+                  alt="Prévisualisation" 
+                  className="w-full h-full object-cover"
+                  />
+                </div>
+                <button
+                  type="button"
+                  className="text-xs text-audio-light/60 hover:text-audio-light mt-1"
+                  onClick={() => setAlbumCover('')}
+                >
+                  Supprimer
+                </button>
+                </div>
+              )}
               </div>
             </div>
             
@@ -146,9 +205,9 @@ const AlbumCreationForm: React.FC<AlbumCreationFormProps> = ({ selectedSongs, on
             </Button>
             <Button
               type="button"
-              variant="accent" 
+              variant="default" 
               size="sm"
-              className="text-xs rounded-full shadow-glow"
+              className="text-xs rounded-full shadow-glow bg-audio-accent hover:bg-audio-accent/90"
               onClick={handleCreateAlbum}
             >
               Créer l'album

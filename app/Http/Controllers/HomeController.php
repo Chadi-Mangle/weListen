@@ -24,7 +24,7 @@ class HomeController extends Controller
 
     public function getArtist(Request $request)
     {
-        $id = $request->input('id', 1);
+        $id = $request->input('id');
         $artist = Artist::with(['albums', 'musics'])->findOrFail($id);
         $formattedArtist = $artist->formatted_for_detail;
         

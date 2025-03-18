@@ -1,24 +1,67 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { X, ArrowRight, CheckSquare, Square, Album as AlbumIcon, Music, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { useApp, Song } from '@/contexts/AppContext';
 import AlbumCreationForm from './AlbumCreationForm';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { playSoundEffect } from '@/utils/soundEffects';
+import { router } from '@inertiajs/react';
+
+// Définir l'interface Song ici plutôt que d'importer de AppContext
+interface Song {
+  id: string;
+  title: string;
+  artist: string;
+  cover: string;
+  duration: string;
+  songUrl: string | null;
+  genre: string;
+  streams?: number;
+}
 
 interface AlbumManagementProps {
   onClose: () => void;
 }
 
 const AlbumManagement: React.FC<AlbumManagementProps> = ({ onClose }) => {
-  const { songs } = useApp();
+  // État local pour les chansons (au lieu d'utiliser useApp)
+  const [songs, setSongs] = useState<Song[]>([]);
+  const [loading, setLoading] = useState(true);
+  
   const { toast } = useToast();
   const [selectedSongs, setSelectedSongs] = useState<Song[]>([]);
   const [showAlbumForm, setShowAlbumForm] = useState(false);
   const [hoveredSong, setHoveredSong] = useState<string | null>(null);
+
+  // Charger les titres au chargement du composant
+  useEffect(() => {
+    fetchSongs();
+  }, []);
+
+  const fetchSongs = () => {
+    setLoading(true);
+    
+    // Utiliser la route Inertia pour récupérer les titres de l'utilisateur
+    router.post(route('songs.fetch'), {}, {
+      preserveState: true,
+      onSuccess: (page) => {
+        if (page.props.songs) {
+          setSongs(page.props.songs);
+        }
+        setLoading(false);
+      },
+      onError: () => {
+        setLoading(false);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger vos titres. Veuillez réessayer.",
+          variant: "destructive"
+        });
+      }
+    });
+  };
 
   const toggleSongSelection = (song: Song) => {
     if (selectedSongs.some(s => s.id === song.id)) {
@@ -83,7 +126,12 @@ const AlbumManagement: React.FC<AlbumManagementProps> = ({ onClose }) => {
             Sélectionnez les titres que vous souhaitez inclure dans votre album.
           </p>
           
-          {songs.length === 0 ? (
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-10">
+              <div className="animate-spin w-8 h-8 border-2 border-audio-accent/20 border-t-audio-accent rounded-full mb-4"></div>
+              <p className="text-audio-light/70">Chargement de vos titres...</p>
+            </div>
+          ) : songs.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-10 text-audio-light/60">
               <Music size={48} className="mb-4 opacity-30" />
               <p>Vous n'avez pas encore de titres.</p>
@@ -116,7 +164,12 @@ const AlbumManagement: React.FC<AlbumManagementProps> = ({ onClose }) => {
                       </div>
                       <div>
                         <p className="font-medium text-sm">{song.title}</p>
-                        <p className="text-xs text-audio-light/60">{song.duration}</p>
+                        <div className="flex items-center gap-2 text-xs text-audio-light/60">
+                          <span>{song.duration}</span>
+                          <span className="bg-audio-accent/20 text-audio-accent rounded-full px-2 py-0.5 text-[10px]">
+                            {song.genre}
+                          </span>
+                        </div>
                       </div>
                     </div>
                     <div>

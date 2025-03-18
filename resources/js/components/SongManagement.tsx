@@ -1,29 +1,97 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { X, Trash2, Play, Music } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { useApp, Song } from '@/contexts/AppContext';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
 import { playSoundEffect } from '@/utils/soundEffects';
+import { router, useForm } from '@inertiajs/react';
 
 interface SongManagementProps {
   onClose: () => void;
 }
 
+interface Song {
+  id: string;
+  title: string;
+  cover: string;
+  duration: string;
+  songUrl: string | null;
+  streams: number | string;
+  genre: string;
+}
+
 const SongManagement: React.FC<SongManagementProps> = ({ onClose }) => {
-  const { songs, removeSong } = useApp();
+  const [songs, setSongs] = useState<Song[]>([]);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const [hoveredSong, setHoveredSong] = useState<string | null>(null);
+  const [deletingSongId, setDeletingSongId] = useState<string | null>(null);
+  
+  // Charger les titres depuis la route user_songs
+  useEffect(() => {
+    fetchSongs();
+  }, []);
+
+  const fetchSongs = () => {
+    setLoading(true);
+    
+    // Utiliser la route Inertia pour récupérer les titres de l'utilisateur
+    router.post(route('songs.fetch'), {}, {
+      preserveState: true,
+      onSuccess: (page) => {
+        if (page.props.songs) {
+          setSongs(page.props.songs);
+        }
+        setLoading(false);
+      },
+      onError: () => {
+        setLoading(false);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger vos titres. Veuillez réessayer.",
+          variant: "destructive"
+        });
+      }
+    });
+  };
 
   const handleDeleteSong = (song: Song) => {
-    removeSong(song.id);
-    playSoundEffect('click');
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer "${song.title}" ?`)) {
+      return;
+    }
     
-    toast({
-      title: "Titre supprimé",
-      description: `${song.title}" a été supprimé de votre bibliothèque.`
+    // Indiquer quel titre est en cours de suppression
+    setDeletingSongId(song.id);
+
+    // Utiliser router.post directement, sans useForm
+    router.post(route('songs.delete'), {
+      id: song.id
+    }, {
+      preserveState: true,
+      onSuccess: () => {
+        // Mettre à jour l'état local
+        setSongs(songs.filter(s => s.id !== song.id));
+        
+        playSoundEffect('click');
+        toast({
+          title: "Titre supprimé",
+          description: `"${song.title}" a été supprimé de votre bibliothèque.`
+        });
+        
+        // Réinitialiser l'état de suppression
+        setDeletingSongId(null);
+      },
+      onError: (errors) => {
+        console.error("Erreurs:", errors);
+        toast({
+          title: "Erreur",
+          description: errors.id || "Impossible de supprimer ce titre. Veuillez réessayer.",
+          variant: "destructive"
+        });
+        
+        // Réinitialiser l'état de suppression
+        setDeletingSongId(null);
+      }
     });
   };
 
@@ -52,7 +120,12 @@ const SongManagement: React.FC<SongManagementProps> = ({ onClose }) => {
         </div>
         
         <div className="p-5 max-h-[70vh] overflow-y-auto">
-          {songs.length === 0 ? (
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-10">
+              <div className="animate-spin w-8 h-8 border-2 border-audio-accent/20 border-t-audio-accent rounded-full mb-4"></div>
+              <p className="text-audio-light/70">Chargement de vos titres...</p>
+            </div>
+          ) : songs.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-10 text-audio-light/60">
               <Music size={48} className="mb-4 opacity-30" />
               <p>Vous n'avez pas encore de titres.</p>
@@ -71,14 +144,25 @@ const SongManagement: React.FC<SongManagementProps> = ({ onClose }) => {
                     <div className="relative w-12 h-12 rounded-md overflow-hidden flex-shrink-0">
                       <img src={song.cover} alt={song.title} className="w-full h-full object-cover" />
                       {hoveredSong === song.id && (
-                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                        <div 
+                          className="absolute inset-0 bg-black/40 flex items-center justify-center cursor-pointer"
+                          onClick={() => {
+                            // Logique pour jouer le titre
+                            playSoundEffect('click');
+                          }}
+                        >
                           <Play size={20} fill="white" className="ml-1" />
                         </div>
                       )}
                     </div>
                     <div>
                       <p className="font-medium text-sm">{song.title}</p>
-                      <p className="text-xs text-audio-light/60">{song.duration}</p>
+                      <div className="flex items-center gap-2 text-xs text-audio-light/60">
+                       <span>{song.duration}</span>
+                       <span className="bg-audio-accent/20 text-audio-accent rounded-full px-2 py-0.5 text-[10px]">
+                        {song.genre}
+                       </span>
+                      </div>
                     </div>
                   </div>
                   <div>
@@ -87,9 +171,10 @@ const SongManagement: React.FC<SongManagementProps> = ({ onClose }) => {
                       size="sm"
                       className="text-xs rounded-full border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-300"
                       onClick={() => handleDeleteSong(song)}
+                      disabled={deletingSongId === song.id}
                     >
                       <Trash2 size={14} className="mr-1" />
-                      Supprimer
+                      {deletingSongId === song.id ? 'Suppression...' : 'Supprimer'}
                     </Button>
                   </div>
                 </div>

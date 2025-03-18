@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Users, Music, Clock, PlayCircle, Heart, Share2, PencilLine, X, Image, Upload, Disc, Disc2, Disc2Icon, DiscAlbum, Disc3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -19,22 +19,24 @@ interface ArtistBannerProps {
 
 const ArtistBanner: React.FC<ArtistBannerProps> = ({ name, image, bio, stats }) => {
   const [isEditingBio, setIsEditingBio] = useState(false);
-  const [editedBio, setEditedBio] = useState(bio);
   const [showProfilePhotoModal, setShowProfilePhotoModal] = useState(false);
   const [showCoverPhotoModal, setShowCoverPhotoModal] = useState(false);
   const { toast } = useToast();
 
+  // Initialiser correctement le formulaire avec la bio actuelle
   const { data, setData, post, processing, errors } = useForm({
     bio: bio
   });
 
+  // Mettre à jour data quand bio change (lors du premier chargement)
+  useEffect(() => {
+    setData('bio', bio);
+  }, [bio]);
+
   const handleBioSave = () => {
-    // Mettre à jour la donnée du formulaire avec la valeur éditée
-    setData('bio', editedBio);
     
-    // Envoyer le formulaire avec Inertia
+    // Envoyer le formulaire avec Inertia de la façon correcte
     post(route('app.creator.bio'), {
-      preserveScroll: true,
       onSuccess: () => {
         setIsEditingBio(false);
         toast({
@@ -49,10 +51,10 @@ const ArtistBanner: React.FC<ArtistBannerProps> = ({ name, image, bio, stats }) 
           description: errors.bio || "Impossible de mettre à jour votre biographie. Veuillez réessayer.",
           variant: "destructive"
         });
-      }
+      },
+      preserveScroll: true
     });
   };
-
 
   return (
     <motion.div
@@ -99,7 +101,9 @@ const ArtistBanner: React.FC<ArtistBannerProps> = ({ name, image, bio, stats }) 
             {/* INFO: Détails de l'artiste */}
             <div className="flex-1">
               <div className="flex items-center gap-2 text-xs text-audio-light/60 mb-1">
-                <span className="uppercase tracking-wider">Artiste vérifié</span>
+                {stats.tracks > 0 && (
+                  <span className="uppercase tracking-wider">Artiste vérifié</span>
+                )}
               </div>
               <h1 className="text-3xl md:text-5xl font-bold text-audio-light mb-2">{name}</h1>
               <div className="flex items-center gap-4 text-sm text-audio-light/60">
@@ -148,17 +152,22 @@ const ArtistBanner: React.FC<ArtistBannerProps> = ({ name, image, bio, stats }) 
             {isEditingBio ? (
               <div className="relative">
                 <textarea
-                  value={editedBio}
-                  onChange={(e) => setEditedBio(e.target.value)}
+                  value={data.bio}
+                  onChange={(e) => setData('bio', e.target.value)}
                   className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-sm text-audio-light/60 focus:outline-none focus:ring-1 focus:ring-audio-accent/30 min-h-[120px] resize-none"
                   style={{ width: '100%', minWidth: '300px', maxWidth: '500px' }}
+                  disabled={processing}
                 />
                 <div className="flex gap-2 mt-2">
                   <Button
                     variant="outline"
                     size="sm"
                     className="text-xs rounded-full"
-                    onClick={() => setIsEditingBio(false)}
+                    onClick={() => {
+                      setIsEditingBio(false);
+                      setData('bio', bio); 
+                    }}
+                    disabled={processing}
                   >
                     Annuler
                   </Button>
@@ -167,14 +176,22 @@ const ArtistBanner: React.FC<ArtistBannerProps> = ({ name, image, bio, stats }) 
                     size="sm"
                     className="text-xs rounded-full"
                     onClick={handleBioSave}
+                    disabled={processing}
                   >
-                    Sauvegarder
+                    {processing ? (
+                      <>
+                        <span className="animate-spin mr-1">◌</span>
+                        Sauvegarde...
+                      </>
+                    ) : (
+                      'Sauvegarder'
+                    )}
                   </Button>
                 </div>
               </div>
             ) : (
               <div className="group relative">
-                <p className="text-sm text-audio-light/60">{editedBio}</p>
+                <p className="text-sm text-audio-light/60">{bio || "Aucune biographie disponible"}</p>
                 <button 
                   onClick={() => setIsEditingBio(true)}
                   className="absolute -right-8 top-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-audio-light/70 hover:text-audio-light"

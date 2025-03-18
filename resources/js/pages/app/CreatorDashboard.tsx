@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Upload, Play, ArrowUpRight, Music, Calendar, X, Image, MusicIcon, CheckCircle2, Album, List, ChevronDown } from 'lucide-react';
+import { Upload, Play, ArrowUpRight, Music, Calendar, X, Image, MusicIcon, CheckCircle2, Album, List, ChevronDown, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -86,10 +86,9 @@ const CreatorDashboard = () => {
     image: '/default-artist.jpg',
     bio: '',
     stats: {
-      followers: '0',
+      albumCoubnt: 0,
       tracks: 0,
-      albums: 0,
-      monthlyListeners: '0'
+      likes: 0,
     }
   }} = props;
   
@@ -170,9 +169,9 @@ const CreatorDashboard = () => {
   
   // Utiliser les informations de l'artiste depuis les props avec des valeurs par défaut
   const formattedStats = {
-    albumCount: artistInfo?.stats?.followers || 0,
-    tracks: artistInfo?.stats?.total_musics || artistInfo?.stats?.tracks || 0,
-    likes: artistInfo?.stats?.total_albums || artistInfo?.stats?.albums || 0,
+    albumCount: artistInfo?.stats?.albumCount || 0,
+    tracks: artistInfo?.stats?.tracks || artistInfo?.stats?.tracks || 0,
+    likes: artistInfo?.stats?.likes || artistInfo?.stats?.albums || 0,
   };
   
   // Utiliser les chansons les plus récentes pour l'affichage
@@ -309,7 +308,7 @@ const CreatorDashboard = () => {
                         <div className="flex justify-between items-center mt-2 text-audio-light/60 text-xs">
                           <div className="flex items-center gap-1">
                             <Music size={12} />
-                            <span>{album.songs.length} titre{album.songs.length !== 1 ? 's' : ''}</span>
+                            <span>{album?.songs?.length || 0} titre{(!album?.songs || album.songs.length !== 1) ? 's' : ''}</span>
                           </div>
                         </div>
                       </div>
@@ -367,7 +366,7 @@ const CreatorDashboard = () => {
                           <span>{upload.date}</span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <Play size={12} />
+                          <Heart size={12} />
                           <span>{upload.streams}</span>
                         </div>
                       </div>
@@ -417,7 +416,7 @@ const CreatorDashboard = () => {
                           </div>
                           <div>
                             <h3 className="font-medium text-sm">{track.title}</h3>
-                            <p className="text-xs text-audio-light/60">{typeof track.streams === 'number' ? track.streams.toLocaleString() : track.streams} écoutes</p>
+                            <p className="text-xs text-audio-light/60">{typeof track.streams === 'number' ? track.streams.toLocaleString() : track.streams} likes</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-6">

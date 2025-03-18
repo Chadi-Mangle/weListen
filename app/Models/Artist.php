@@ -80,7 +80,7 @@ class Artist extends User
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'description' => $this->description ?? 'Cet artiste n\'a pas encore ajouté de biographie.',
+            'description' => $this->bio ?? 'Cet artiste n\'a pas encore ajouté de biographie.',
             'image' => $this->avatar ?? '/images/default-artist.jpg',
             'backgroundColor' => getRandomColor($this->id),
             'topTracks' => $topTracks,
