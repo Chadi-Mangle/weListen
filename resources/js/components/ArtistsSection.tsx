@@ -305,7 +305,7 @@ const ArtistsSection = ({ artists = [] }) => {
           <span className="px-3 py-1 text-xs font-medium rounded-full glass-accent text-audio-accent inline-block mb-4">
             Artistes exclusifs
           </span>
-          <h2 className="text-4xl md:text-5xl font-bold mb-6 tracking-tighter">Découvrez les artistes WeListen</h2>
+          <h2 className="text-4xl md:text-5xl font-bold mb-6 tracking-tighter">Découvrez les artistes <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-600">WeListen</span></h2>
           <p className="text-audio-light/70 max-w-2xl mx-auto text-balance">
             Explorez notre catalogue d'artistes exclusifs et plongez dans leurs univers sonores uniques.
           </p>

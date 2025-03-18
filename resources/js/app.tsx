@@ -8,6 +8,7 @@ import { initializeTheme } from './hooks/use-appearance';
 import MainLayout from './layouts/MainLayout';
 import { AppProvider } from '@/contexts/AppContext';
 import PageTransition from './components/PageTransition';
+import { PlayerProvider } from '@/contexts/AudioContext';
 
 declare global {
     const route: typeof routeFn;
@@ -55,7 +56,9 @@ createInertiaApp({
         const root = createRoot(el);
 
         root.render(
-            <App {...props} />
+            <PlayerProvider>
+                <App {...props} />
+            </PlayerProvider>
         );
     },
     progress: {

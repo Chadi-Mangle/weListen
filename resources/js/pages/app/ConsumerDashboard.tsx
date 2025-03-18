@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import AppHeader from '@/components/AppHeader';
 import { usePage } from '@inertiajs/react';
+import { usePlayer } from '@/contexts/AudioContext';
+import AudioPlayer from '@/components/AudioPlayer';
 
 // Types pour les données provenant du backend
 interface Track {
@@ -64,6 +66,9 @@ const ConsumerDashboardContent = () => {
     popularArtists,
     userData
   } = usePage().props as any;
+
+  // Ajouter cette ligne pour utiliser le contexte du lecteur
+  const { playTrack } = usePlayer();
 
   const [newPlaylistName, setNewPlaylistName] = useState('');
   const [showCreatePlaylist, setShowCreatePlaylist] = useState(false);
@@ -308,7 +313,11 @@ const ConsumerDashboardContent = () => {
                             {hoveredTrack === track.id ? (
                               <button
                                 className="absolute inset-0 flex items-center justify-center bg-black/40"
-                                onClick={() => playSoundEffect('click')}
+                                onClick={() => {
+                                  playSoundEffect('click');
+                                  // Utilisez le contexte de lecteur ici
+                                  playTrack(track);
+                                }}
                               >
                                 <Play size={16} className="text-white" />
                               </button>

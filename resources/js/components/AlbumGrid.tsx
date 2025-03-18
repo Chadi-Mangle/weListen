@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Disc, Play, Clock, Heart } from 'lucide-react';
+import { Disc, Play, Clock, Heart, ChevronLeft, ChevronRight } from 'lucide-react';
 import { playClickSound, playHoverSound } from '@/utils/soundEffects';
 
 interface AlbumProps {
@@ -119,13 +119,14 @@ const Album = ({ id, name, artist, cover_image, year, songs_count, duration }: A
   );
 };
 
-const AlbumGrid = ( { albums = [] } ) => {
+const AlbumGrid = ({ albums = [] }) => {
   const [filter, setFilter] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
   const carouselRef = useRef<HTMLDivElement>(null);
   
+  // Filtrez les albums en tenant compte des albums sans genre
   const filteredAlbums = filter 
-    ? albums.filter(album => album.genre.name === filter) 
+    ? albums.filter(album => album.genre && album.genre.name === filter) 
     : albums;
   
   const itemsPerPage = 6;

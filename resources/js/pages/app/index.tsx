@@ -58,7 +58,7 @@ const RoleSelectionContent = () => {
             transition={{ delay: 0.2, duration: 0.6 }}
             className="text-4xl md:text-5xl font-bold mb-6 tracking-tighter text-audio-light"
           >
-            Bienvenue sur <span className="text-transparent bg-clip-text bg-gradient-to-r from-audio-accent to-audio-accent-light">WeListen</span>
+             Bienvenue sur <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-600">WeListen</span>
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0 }}

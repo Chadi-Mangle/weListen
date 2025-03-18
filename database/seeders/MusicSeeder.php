@@ -22,9 +22,11 @@ class MusicSeeder extends Seeder
         
         // Récupérer les genres
         $rapFR = Genre::where('name', 'Rap FR')->first();
+
+        $EDM = Genre::where('name', 'EDM')->first();
         
         // Récupérer les albums existants
-        $ultraAlbum = Album::where('name', 'Ultra')->first();       
+        $ultraAlbum = Album::where('name', 'Ultra')->first();
         
         // Vérification des données nécessaires
         if (!$booba || !$rapFR || !$ultraAlbum) {
@@ -38,6 +40,26 @@ class MusicSeeder extends Seeder
         // Supprimer les titres existants
         Music::where('titre', 'Mona Lisa')->delete();
         
+
+        $alban = User::firstOrCreate(
+            ['name' => 'JustADog'],
+            [
+                'email' => 'alban@example.com',
+                'password' => bcrypt('password'),
+                'bio' => 'En vrai...',
+                'avatar' => 'https://media.licdn.com/dms/image/v2/D4E03AQHX7O8uuI6hRg/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1718277998153?e=1747872000&v=beta&t=t0VtHIQ-MI7FhBOaIdYQElHeuevQR-z6VCLb7Arxkwk',
+            ]
+        );
+
+        // Créer un nouveau morceau
+        Music::create([
+            'titre' => 'Woof Woof',
+            'user_id' => $alban->id,
+            'genre_id' => $EDM->id,
+            'song' => 'songs/mona_lisa.mp3',
+        ]);
+        
+
         // Créer un nouveau morceau
         $music = Music::create([
             'titre' => 'Mona Lisa',

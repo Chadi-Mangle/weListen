@@ -87,6 +87,9 @@ class AppController extends Controller
                 });
                 
             // Récupérer les albums
+            // $albums = $artist->albums()->get()->map(function($album) {
+            //     return $album->formatted_for_list;
+            // });
             $albums = $artist->albums()
                 ->select('id', 'name as title', 'description', 'cover_image as cover', 'release_date', 'created_at')
                 ->orderBy('created_at', 'desc')
@@ -100,25 +103,30 @@ class AppController extends Controller
                             return [
                                 'id' => $song->id,
                                 'title' => $song->title,
-                                'duration' => $song->formatted_duration ?? '0:00'
+                                // 'duration' => $song->formatted_duration ?? '0:00'
                             ];
                         });
                         
                     return [
                         'id' => $album->id,
                         'title' => $album->title,
+                        'trackCount' => 1,
                         'releaseDate' => $album->release_date ? $album->release_date : null,
                         'cover' => $album->cover ? $album->cover : '/default-album.png',
                     ];
                 });
             
-            $stats = $artist->getStats();
-            
             $artistInfo = [
                 'name' => $artist->name,
                 'image' => $artist->avatar ?? '/default-artist.jpg',
                 'bio' => $artist->bio ?? "Cet artiste n'a pas encore ajouté de biographie.",
-                'stats' => $stats
+                'stats' => [
+                    'albumCount' => $albums->count(), // Utilise directement le nombre d'albums
+                    'tracks' => $songs->count(), // Utilise directement le nombre de chansons
+                    'likes' => $songs->sum(function($song) {
+                        return is_numeric($song['streams']) ? $song['streams'] : 0;
+                    }),
+                ]
             ];
         }
         
@@ -212,6 +220,7 @@ class AppController extends Controller
 
         // Playlists personnelles de l'utilisateur
         $userPlaylists = Playlist::where('user_id', $userId)
+            ->where('type', 'playlist')
             ->get()
             ->map(function ($playlist) {
                 // Récupérer la première chanson pour la cover si aucune cover n'est définie

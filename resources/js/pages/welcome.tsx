@@ -44,7 +44,7 @@ export default function Welcome() {
                   <span className="px-3 py-1 text-xs font-medium rounded-full glass-accent text-audio-accent inline-block mb-4">
                     Artiste du mois
                   </span>
-                  <h2 className="text-4xl font-bold mb-6">Découvrez Booba</h2>
+                  <h2 className="text-4xl font-bold mb-6">Découvrez <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-600">Booba</span></h2>
                   <p className="text-audio-light/80 mb-6 text-balance">
                     Figure emblématique du rap français, Booba a révolutionné le genre avec son style unique. Des sonorités futuristes aux lyrics incisifs, découvrez l'univers du Duc de Boulogne.
                   </p>

@@ -37,6 +37,7 @@ interface Album {
   cover: string;
   releaseDate: string | null;
   songs: { id: string; title: string; duration: string }[];
+  songsCount?: number; // Nouvelle propriété pour le nombre de titres
   created_at: string;
 }
 
@@ -308,7 +309,10 @@ const CreatorDashboard = () => {
                         <div className="flex justify-between items-center mt-2 text-audio-light/60 text-xs">
                           <div className="flex items-center gap-1">
                             <Music size={12} />
-                            <span>{album?.songs?.length || 0} titre{(!album?.songs || album.songs.length !== 1) ? 's' : ''}</span>
+                            {/* Utilisez la propriété songsCount ou comptez le tableau songs */}
+                            <span>
+                                {album.songsCount || (album.songs && album.songs.length) || 0} titres
+                            </span>
                           </div>
                         </div>
                       </div>

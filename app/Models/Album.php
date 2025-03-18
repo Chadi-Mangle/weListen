@@ -13,7 +13,6 @@ class Album extends Playlist
     
 
     protected $appends = [
-        'year',
         'formatted_for_list',
         'formatted_for_detail',
     ];
@@ -43,7 +42,7 @@ class Album extends Playlist
                 'name' => $this->genre->name,
             ] : null,
             'year' => $this->year,
-            'songs_count' => $this->musics->count(),
+            'songs_count' => $this->songs_count,
             'duration' => $this->formatted_duration,
         ];
     }

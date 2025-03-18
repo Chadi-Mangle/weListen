@@ -24,6 +24,7 @@ class Playlist extends Model
     protected $appends = [
         'year',
         'formatted_duration',
+        'songs_count',
     ];
 
     public function user()
@@ -43,6 +44,11 @@ class Playlist extends Model
             ->withPivot('position')
             ->orderBy('position')
             ->withTimestamps();
+    }
+
+    public function getSongsCountAttribute()
+    {
+        return $this->musics->count();
     }
 
     public function getYearAttribute()
