@@ -49,8 +49,8 @@ export default function Password() {
     };
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Profile settings" />
+        // <AppLayout breadcrumbs={breadcrumbs}>
+        //     <Head title="Profile settings" />
 
             <SettingsLayout>
                 <div className="space-y-6">
@@ -123,6 +123,6 @@ export default function Password() {
                     </form>
                 </div>
             </SettingsLayout>
-        </AppLayout>
+        // </AppLayout>
     );
 }

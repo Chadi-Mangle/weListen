@@ -1,9 +1,7 @@
 <?php
-
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-
 return new class extends Migration
 {
     /**
@@ -15,7 +13,12 @@ return new class extends Migration
             $table->id();
             $table->timestamps();
             $table->string('titre');
-            $table->string('');
+            $table->string('song');
+            $table->string('cover_image')->nullable();
+            $table->text('description')->nullable();
+            $table->integer('duration')->nullable();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('genre_id')->nullable()->constrained();
         });
     }
 

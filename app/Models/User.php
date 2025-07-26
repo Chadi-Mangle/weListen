@@ -21,6 +21,9 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'avatar',
+        'bio',
+        'isArtist', 
     ];
 
     /**
@@ -44,5 +47,15 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function likedMusic()
+    {
+        return $this->belongsToMany(Music::class, 'likes')->withTimestamps();
+    }
+
+    public function hasLiked(Music $music)
+    {
+        return $this->likedMusic()->where('music_id', $music->id)->exists();
     }
 }

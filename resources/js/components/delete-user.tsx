@@ -12,14 +12,17 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 
 export default function DeleteUser() {
     const passwordInput = useRef<HTMLInputElement>(null);
-    const { data, setData, delete: destroy, processing, reset, errors, clearErrors } = useForm({ password: '' });
+    const { data, setData, delete: destroy, processing, reset, errors, clearErrors, post } = useForm({ password: '' });
 
     const deleteUser: FormEventHandler = (e) => {
         e.preventDefault();
 
         destroy(route('profile.destroy'), {
             preserveScroll: true,
-            onSuccess: () => closeModal(),
+            onSuccess: () => {
+                closeModal();
+                // post(route('logout'));
+            }, 
             onError: () => passwordInput.current?.focus(),
             onFinish: () => reset(),
         });
